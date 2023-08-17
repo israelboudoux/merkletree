@@ -1,4 +1,4 @@
-package org.boudoux;
+package edu.boudoux;
 
 import org.apache.commons.lang3.StringUtils;
 

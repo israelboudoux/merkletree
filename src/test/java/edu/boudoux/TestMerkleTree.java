@@ -1,4 +1,4 @@
-package org.boudoux;
+package edu.boudoux;
 
 public class TestMerkleTree {
 

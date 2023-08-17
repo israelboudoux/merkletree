@@ -1,5 +1,7 @@
 package org.boudoux;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -9,6 +11,7 @@ import java.util.List;
 public class MerkleTree {
     private final Node root;
     private final int totalLevels;
+    private final Type type;
 
     private final static MessageDigest hash;
 
@@ -20,11 +23,16 @@ public class MerkleTree {
         }
     }
 
-    public MerkleTree(int totalLevels) {
+    public MerkleTree(int totalLevels, Type type) {
         assert totalLevels > 0;
 
         this.root = new Node();
         this.totalLevels = totalLevels; // allows for 2^[totalLevels] elements
+        this.type = type;
+    }
+
+    public MerkleTree(int totalLevels) {
+        this(totalLevels, Type.DENSE);
     }
 
     public int getTotalLevels() {
@@ -32,11 +40,59 @@ public class MerkleTree {
     }
 
     public Node add(String value) {
-        Node freeSlot = getNextSlot(this.root);
+        Node freeSlot;
+
+        if (this.type == Type.DENSE) {
+            freeSlot = this.getNextSlot(this.root);
+        } else {
+            freeSlot = this.getSlotByAddress(value);
+        }
 
         freeSlot.setValue(value);
 
         return freeSlot;
+    }
+
+    private Node getSlotByAddress(String value) {
+        long leafAddress = Long.parseLong(value, 16); // validates it is an hex string and parses to long
+
+        String leafPath = this.getLeafPath(leafAddress);
+        Node resultingNode = this.root;
+
+        for (int i = 0; i < leafPath.length(); i++) {
+            char bitAddress = leafPath.charAt(i);
+
+            resultingNode = getNodeByBitAddress(resultingNode, bitAddress);
+        }
+
+        return resultingNode;
+    }
+
+    private Node getNodeByBitAddress(Node currentNode, char bitAddress) {
+        if (bitAddress == '0') {
+            if (currentNode.getLeftChildNode() == null) {
+                return currentNode.addLeftChildNode();
+            }
+
+            return currentNode.getLeftChildNode();
+        }
+
+        // bitAddress == '1'
+        if (currentNode.getRightChildNode() == null) {
+            return currentNode.addRightChildNode();
+        }
+
+        return currentNode.getRightChildNode();
+    }
+
+    /**
+     * Returns the leaf path in binary rep.
+     *
+     * @param leafAddress
+     * @return
+     */
+    private String getLeafPath(long leafAddress) {
+        return StringUtils.leftPad(Long.toBinaryString(leafAddress), this.getTotalLevels(), '0');
     }
 
     public String toString() {
@@ -75,7 +131,7 @@ public class MerkleTree {
         return getNextSlot(rootNode.getRightChildNode());
     }
 
-    public String getRoot() {
+    public String getRootHash() {
         return this.root.getValue();
     }
 
@@ -123,6 +179,11 @@ public class MerkleTree {
         }
 
         return currentHash;
+    }
+
+    public enum Type {
+        DENSE,
+        SPARSE;
     }
 
     public enum Direction {
@@ -241,7 +302,7 @@ public class MerkleTree {
         private void updateTree(Node rootNode) {
             assert !this.isLeaf() && rootNode.getLeftChildNode() != null && rootNode.getLeftChildNode().getValue() != null;
 
-            String leftNodeValue = rootNode.getLeftChildNode().getValue();
+            String leftNodeValue = rootNode.getLeftChildNode() != null && rootNode.getLeftChildNode().getValue() != null ? rootNode.getLeftChildNode().getValue() : "0";
             String rightNodeValue = rootNode.getRightChildNode() != null && rootNode.getRightChildNode().getValue() != null ? rootNode.getRightChildNode().getValue() : "0";
 
             rootNode.value = bytesToHex(hash.digest((leftNodeValue + rightNodeValue).getBytes(StandardCharsets.UTF_8)));
@@ -258,22 +319,27 @@ public class MerkleTree {
             return leftChildNode;
         }
 
-        public void addLeftChildNode() {
+        public Node addLeftChildNode() {
             assert !this.leaf && this.leftChildNode == null;
 
             this.leftChildNode = new Node(this, this.level + 1, this.level + 1 == MerkleTree.this.getTotalLevels(), Direction.LEFT);
+
+            return this.leftChildNode;
         }
 
         public Node getRightChildNode() {
             return rightChildNode;
         }
 
-        public void addRightChildNode() {
+        public Node addRightChildNode() {
             assert !this.leaf && this.rightChildNode == null;
 
             this.rightChildNode = new Node(this, this.level + 1, this.level + 1 == MerkleTree.this.getTotalLevels(), Direction.RIGHT);
+
+            return this.rightChildNode;
         }
 
+        // TODO
         public String toString() {
             StringBuilder sb = new StringBuilder();
 

@@ -1,22 +1,21 @@
 package edu.boudoux;
 
+import org.junit.Test;
+
 public class TestMerkleTree {
-
-    public static void main(String[] args) {
-        System.out.println("Testing DENSE MT");
-
-        // Testing DENSE MT
+    @Test
+    public void testInsertionIntoDenseMerkleTree() {
         for (int totalLevels = 1; totalLevels <= 4; totalLevels++) {
             MerkleTree merkleTree = new MerkleTree(totalLevels);
 
             addElements(merkleTree, totalLevels);
 
-            System.out.println(merkleTree + "\n");
+            System.out.println(merkleTree);
         }
+    }
 
-        System.out.println("Testing SPARSE MT");
-
-        // Testing SPARSE MT
+    @Test
+    public void testInsertionIntoSparseMerkleTree() {
         for (int totalLevels = 1; totalLevels <= 4; totalLevels++) {
             MerkleTree merkleTree = new MerkleTree(totalLevels, MerkleTree.Type.SPARSE);
 
@@ -26,7 +25,7 @@ public class TestMerkleTree {
         }
     }
 
-    private static void addElements(MerkleTree merkleTree, int totalLevels) {
+    private void addElements(MerkleTree merkleTree, int totalLevels) {
         long totalElements = (long) Math.pow(2, totalLevels);
 
         for (long i = totalElements - 1; i >= 0; i--) {

@@ -86,10 +86,10 @@ public class MerkleTree {
     }
 
     /**
-     * Returns the leaf path in binary rep.
      *
-     * @param leafAddress
-     * @return
+     * @param leafAddress the address representation
+     *
+     * @return Returns the leaf path in binary rep
      */
     private String getLeafPath(long leafAddress) {
         return StringUtils.leftPad(Long.toBinaryString(leafAddress), this.getTotalLevels(), '0');
@@ -137,9 +137,9 @@ public class MerkleTree {
 
     public static String bytesToHex(byte[] hash) {
         StringBuilder hexString = new StringBuilder(2 * hash.length);
-        for (int i = 0; i < hash.length; i++) {
-            String hex = Integer.toHexString(0xff & hash[i]);
-            if(hex.length() == 1) {
+        for (byte b : hash) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
                 hexString.append('0');
             }
             hexString.append(hex);
@@ -257,7 +257,7 @@ public class MerkleTree {
             return value;
         }
 
-        public void setValue(String value) {
+        private void setValue(String value) {
             assert this.leaf && this.value == null;
 
             this.value = value;
@@ -300,7 +300,7 @@ public class MerkleTree {
         }
 
         private void updateTree(Node rootNode) {
-            assert !this.isLeaf() && rootNode.getLeftChildNode() != null && rootNode.getLeftChildNode().getValue() != null;
+            assert !rootNode.isLeaf();
 
             String leftNodeValue = rootNode.getLeftChildNode() != null && rootNode.getLeftChildNode().getValue() != null ? rootNode.getLeftChildNode().getValue() : "0";
             String rightNodeValue = rootNode.getRightChildNode() != null && rootNode.getRightChildNode().getValue() != null ? rootNode.getRightChildNode().getValue() : "0";
@@ -339,7 +339,7 @@ public class MerkleTree {
             return this.rightChildNode;
         }
 
-        // TODO
+        // TODO implement a pretty print of the tree
         public String toString() {
             StringBuilder sb = new StringBuilder();
 
@@ -361,14 +361,14 @@ public class MerkleTree {
             if (this.getLeftChildNode() != null)
                 return this.getLeftChildNode().toString();
 
-            return "";
+            return "0";
         }
 
         private String toStringRightNode() {
             if (this.getRightChildNode() != null)
                 return this.getRightChildNode().toString();
 
-            return "";
+            return "0";
         }
     }
 }
